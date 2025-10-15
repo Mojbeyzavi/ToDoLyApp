@@ -1,0 +1,14 @@
+/Users/mojdehbeyzavi/Desktop/ToDoLyApp/obj/Debug/net8.0/ToDoLyApp.GeneratedMSBuildEditorConfig.editorconfig
+/Users/mojdehbeyzavi/Desktop/ToDoLyApp/obj/Debug/net8.0/ToDoLyApp.AssemblyInfoInputs.cache
+/Users/mojdehbeyzavi/Desktop/ToDoLyApp/obj/Debug/net8.0/ToDoLyApp.AssemblyInfo.cs
+/Users/mojdehbeyzavi/Desktop/ToDoLyApp/obj/Debug/net8.0/ToDoLyApp.csproj.CoreCompileInputs.cache
+/Users/mojdehbeyzavi/Desktop/ToDoLyApp/bin/Debug/net8.0/ToDoLyApp
+/Users/mojdehbeyzavi/Desktop/ToDoLyApp/bin/Debug/net8.0/ToDoLyApp.deps.json
+/Users/mojdehbeyzavi/Desktop/ToDoLyApp/bin/Debug/net8.0/ToDoLyApp.runtimeconfig.json
+/Users/mojdehbeyzavi/Desktop/ToDoLyApp/bin/Debug/net8.0/ToDoLyApp.dll
+/Users/mojdehbeyzavi/Desktop/ToDoLyApp/bin/Debug/net8.0/ToDoLyApp.pdb
+/Users/mojdehbeyzavi/Desktop/ToDoLyApp/obj/Debug/net8.0/ToDoLyApp.dll
+/Users/mojdehbeyzavi/Desktop/ToDoLyApp/obj/Debug/net8.0/refint/ToDoLyApp.dll
+/Users/mojdehbeyzavi/Desktop/ToDoLyApp/obj/Debug/net8.0/ToDoLyApp.pdb
+/Users/mojdehbeyzavi/Desktop/ToDoLyApp/obj/Debug/net8.0/ToDoLyApp.genruntimeconfig.cache
+/Users/mojdehbeyzavi/Desktop/ToDoLyApp/obj/Debug/net8.0/ref/ToDoLyApp.dll

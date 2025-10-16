@@ -1,5 +1,4 @@
 // ToDoLy - Console App
-//
 
 using System;
 using System.Collections.Generic;
@@ -12,7 +11,7 @@ List<TaskItem> tasks = Load();          // Load tasks from file (or empty list i
 string dataFile = "tasks.json";         // Name of the JSON file where tasks are saved
 
 // ===== Main program loop =====
-bool running = true;                    // This keeps the app running until the user quits
+bool running = true;                    //  keeps the app running until the user quits
 while (running)
 {
     ShowHeader();                       // Show colorful header + task summary
@@ -39,7 +38,7 @@ while (running)
     }
 }
 
-// ===== Functions =====
+// ===== Functions ===== :)
 
 void ShowHeader()
 {
@@ -292,4 +291,5 @@ class TaskItem
     public DateTime DueDate { get; set; }    // Deadline date
     public TaskStatus Status { get; set; } = TaskStatus.Todo; // Todo or Done
 }
+
 

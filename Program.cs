@@ -1,5 +1,5 @@
-// ToDoLy - Simple Console App with enum + JSON
-// Beginner-friendly version with colors, spacing, and clear comments
+// ToDoLy - Console App
+//
 
 using System;
 using System.Collections.Generic;
@@ -292,3 +292,4 @@ class TaskItem
     public DateTime DueDate { get; set; }    // Deadline date
     public TaskStatus Status { get; set; } = TaskStatus.Todo; // Todo or Done
 }
+

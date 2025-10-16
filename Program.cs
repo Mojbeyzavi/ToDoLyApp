@@ -1,4 +1,4 @@
-// ToDoLy - Simple Console App with enum + JSON (professor-style)
+// ToDoLy - Simple Console App with enum + JSON 
 
 using System;
 using System.Collections.Generic;
@@ -179,3 +179,4 @@ class TaskItem
     public DateTime DueDate { get; set; }
     public TaskStatus Status { get; set; } = TaskStatus.Todo;
 }
+

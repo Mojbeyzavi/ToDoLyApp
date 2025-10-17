@@ -1,4 +1,13 @@
 // ToDoLy - Console App
+// -------------------------------------------------------------
+// STRUCTURE OVERVIEW (for my presentation):
+// 1) Main Program (Menu & Logic)        -> while loop + user choices
+// 2) Class – TaskItem (Model)           -> defines what a task looks like
+// 3) Enum – TaskStatus                  -> Todo / Done
+// 4) List of Tasks                      -> in-memory storage (List<TaskItem>)
+// 5) Methods                            -> Add, Edit, Show, Save, etc. (modular)
+// 6) Saving & Loading (JSON persistence)-> keep data between sessions
+// -------------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
@@ -6,17 +15,25 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 
-// ===== Data section =====
-List<TaskItem> tasks = Load();          // Load tasks from file (or empty list if file doesn't exist)
-string dataFile = "tasks.json";         // Name of the JSON file where tasks are saved
+// =============================================================
+// (4) LIST OF TASKS + (6) LOADING PERSISTENT DATA (JSON -> memory)
+// -  keep tasks in memory as List<TaskItem>.
+// - At startup it try to load existing tasks from tasks.json.
+// =============================================================
+List<TaskItem> tasks = Load();              // Load tasks from file (or empty list if file doesn't exist)
+string dataFile = "tasks.json";             // JSON file that persists tasks between runs
 
-// ===== Main program loop =====
-bool running = true;                    //  keeps the app running until the user quits
+// =============================================================
+// (1) MAIN PROGRAM (MENU & LOGIC)
+// - Simple while loop keeps the app running
+// - Shows a menu and routes the user's choice to functions
+// =============================================================
+bool running = true;                        // Keeps the app running until the user quits
 while (running)
 {
-    ShowHeader();                       // Show colorful header + task summary
+    ShowHeader();                           // Header + summary (how many Todo/Done)
 
-    // Print menu options in yellow for better visibility
+    // Menu options (colored for readability)
     WithColor(ConsoleColor.Yellow, () =>
     {
         Console.WriteLine(">> Pick an option:");
@@ -25,51 +42,54 @@ while (running)
         Console.WriteLine(">> (3) Edit Task (update, mark as done, remove)");
         Console.WriteLine(">> (4) Save and Quit");
     });
-    Prompt("> ");                       // Cyan-colored input prompt
+    Prompt("> ");                           // Cyan prompt for input
 
-    // Read the user's choice and handle it
+    // Route the user's selection to the right action (modular methods)
     switch ((Console.ReadLine() ?? "").Trim())
     {
-        case "1": ShowTasksMenu(); break;   // Show list of tasks
-        case "2": AddTask(); break;         // Add a new task
-        case "3": EditTaskMenu(); break;    // Edit or delete an existing task
-        case "4": Save(); running = false; break; // Save and exit program
-        default: Error("Invalid selection."); Pause(); break; // Handle wrong input
+        case "1": ShowTasksMenu(); break;               // View tasks (date/project)
+        case "2": AddTask(); break;                     // Create a new task
+        case "3": EditTaskMenu(); break;                // Update / toggle / remove
+        case "4": Save(); running = false; break;       // Persist to JSON + exit
+        default: Error("Invalid selection."); Pause(); break;
     }
 }
 
-// ===== Functions ===== :)
+// =============================================================
+// (5) METHODS — small, focused functions that keep code modular
+// =============================================================
 
 void ShowHeader()
 {
-    Console.Clear(); // Clear screen
-    int todo = tasks.Count(t => t.Status == TaskStatus.Todo); // Count tasks not done yet
+    Console.Clear();
+    int todo = tasks.Count(t => t.Status == TaskStatus.Todo); // Count pending tasks
     int done = tasks.Count(t => t.Status == TaskStatus.Done); // Count completed tasks
 
-    Banner("Welcome to ToDoLy"); // Pretty cyan title banner
+    Banner("Welcome to ToDoLy"); // Fancy title banner
 
     Console.Write(">> You have ");
-    WithColor(ConsoleColor.Cyan, () => Console.Write(todo)); // Cyan number for todo
+    WithColor(ConsoleColor.Cyan, () => Console.Write(todo));   // Highlight numbers
     Console.Write(" tasks todo and ");
-    WithColor(ConsoleColor.Green, () => Console.Write(done)); // Green number for done
+    WithColor(ConsoleColor.Green, () => Console.Write(done));
     Console.WriteLine(" tasks are done!");
     Console.WriteLine();
 }
 
 void ShowTasksMenu()
 {
+    // Choose sorting/grouping method (by date or by project)
     WithColor(ConsoleColor.Yellow, () => Console.WriteLine("Show by: (1) Date   (2) Project"));
     Prompt("> ");
-    var choice = (Console.ReadLine() ?? "").Trim(); // Read user choice
+    var choice = (Console.ReadLine() ?? "").Trim();
 
-    // Sort tasks based on user selection
+    // Sorted view to keep output tidy and predictable
     List<TaskItem> list = choice == "2"
         ? tasks.OrderBy(t => t.Project).ThenBy(t => t.DueDate).ThenBy(t => t.Id).ToList()
         : tasks.OrderBy(t => t.DueDate).ThenBy(t => t.Id).ToList();
 
-    PrintTable(list); // Print all tasks
+    PrintTable(list); // Show all tasks
 
-    // Optional project filter
+    // Optional: filter further by project name
     if (choice == "2")
     {
         Prompt("Filter by project (enter to skip): ");
@@ -78,11 +98,12 @@ void ShowTasksMenu()
             PrintTable(list.Where(t => t.Project.Equals(p, StringComparison.OrdinalIgnoreCase)).ToList());
     }
 
-    Pause(); // Wait before returning to menu
+    Pause();
 }
 
 void AddTask()
 {
+    // Gather minimal task info (Title, Project, DueDate)
     Prompt("Title: ");
     string title = (Console.ReadLine() ?? "").Trim();
     if (string.IsNullOrWhiteSpace(title)) { Error("Title is required."); Pause(); return; }
@@ -96,27 +117,30 @@ void AddTask()
         Error("Invalid date."); Pause(); return;
     }
 
-    // Generate the next available ID
+    // Generate next unique Id and add to list in memory
     int nextId = tasks.Count == 0 ? 1 : tasks.Max(t => t.Id) + 1;
     tasks.Add(new TaskItem { Id = nextId, Title = title, Project = project, DueDate = due, Status = TaskStatus.Todo });
-    Success("Task added."); Pause();
+    Success("Task added.");
+    Pause();
 }
 
 void EditTaskMenu()
 {
-    PrintTable(tasks.OrderBy(t => t.Id).ToList()); // Show all tasks before editing
+    // Show tasks first so the user can see IDs clearly
+    PrintTable(tasks.OrderBy(t => t.Id).ToList());
     Prompt("Enter Task ID: ");
     if (!int.TryParse(Console.ReadLine(), out int id)) { Error("Invalid ID."); Pause(); return; }
 
     var task = tasks.FirstOrDefault(t => t.Id == id);
     if (task is null) { Error("Task not found."); Pause(); return; }
 
-    // Menu for editing options
+    // Offer common edit actions
     WithColor(ConsoleColor.Yellow, () => Console.WriteLine("(1) Update  (2) Mark done  (3) Mark undone  (4) Remove  (0) Back"));
     Prompt("> ");
     switch ((Console.ReadLine() ?? "").Trim())
     {
-        case "1": // Update title, project or due date
+        case "1":
+            // Update selected fields (keep old values if input is empty)
             Prompt($"New title (enter to keep '{task.Title}'): ");
             var newTitle = Console.ReadLine();
             if (!string.IsNullOrWhiteSpace(newTitle)) task.Title = newTitle!.Trim();
@@ -130,7 +154,8 @@ void EditTaskMenu()
             if (!string.IsNullOrWhiteSpace(s) && DateTime.TryParse(s, out DateTime newDue))
                 task.DueDate = newDue;
 
-            Success("Updated."); Pause();
+            Success("Updated.");
+            Pause();
             break;
 
         case "2": task.Status = TaskStatus.Done; Success("Marked as DONE.");   Pause(); break;
@@ -144,16 +169,15 @@ void PrintTable(List<TaskItem> list)
 {
     Console.WriteLine();
 
-    // Fixed column widths for easy layout
+    // Fixed column widths for consistent layout
     int idW = 4;
     int titleW = 30;
     int projW = 18;
     int dueW = 10;
     int statusW = 6;
-
     int total = idW + titleW + projW + dueW + statusW + 8;
 
-    // Print table header
+    // Header lines
     WithColor(ConsoleColor.DarkGray, () => Console.WriteLine(new string('─', total)));
     WithColor(ConsoleColor.Cyan, () =>
     {
@@ -163,7 +187,6 @@ void PrintTable(List<TaskItem> list)
 
     var today = DateTime.Now.Date;
 
-    // Loop through all tasks and print each row
     foreach (var t in list)
     {
         bool isDone = t.Status == TaskStatus.Done;
@@ -175,7 +198,7 @@ void PrintTable(List<TaskItem> list)
         string due = t.DueDate.ToString("yyyy-MM-dd");
         string statusText = t.Status.ToString();
 
-        // Write row data
+        // One small writer action so we can wrap with color when needed
         Action writeRow = () =>
         {
             Console.Write($"{Pad(t.Id.ToString(), idW)}  ");
@@ -183,7 +206,7 @@ void PrintTable(List<TaskItem> list)
             Console.Write($"{Pad(proj, projW)}  ");
             Console.Write($"{Pad(due, dueW)}  ");
 
-            // Color status for better visibility
+            // Status color hints: Done=Green, Overdue=Red, Soon=Yellow, Else=Gray
             if (isDone) WithColor(ConsoleColor.Green, () => Console.Write(Pad(statusText, statusW)));
             else if (isOverdue) WithColor(ConsoleColor.Red, () => Console.Write(Pad(statusText, statusW)));
             else if (isSoon) WithColor(ConsoleColor.Yellow, () => Console.Write(Pad(statusText, statusW)));
@@ -192,7 +215,7 @@ void PrintTable(List<TaskItem> list)
             Console.WriteLine();
         };
 
-        // Done tasks are printed dim (gray)
+        // Completed rows appear dim to de-emphasize
         if (isDone) WithColor(ConsoleColor.DarkGray, writeRow);
         else writeRow();
     }
@@ -203,9 +226,12 @@ void PrintTable(List<TaskItem> list)
 
 void Save()
 {
+    // =========================================================
+    // (6) SAVING (memory -> JSON file)
+    // - Serialize the in-memory list and write to tasks.json.
+    // =========================================================
     try
     {
-        // Convert tasks to JSON and write to file
         var json = JsonSerializer.Serialize(tasks, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(dataFile, json);
         Success("Saved. Bye!");
@@ -218,10 +244,13 @@ void Save()
 
 static List<TaskItem> Load()
 {
+    // =========================================================
+    // (6) LOADING (JSON file -> memory)
+    // - If file doesn't exist, start with an empty list.
+    // =========================================================
     const string file = "tasks.json";
     try
     {
-        // If file doesn’t exist, start with an empty list
         if (!File.Exists(file)) return new List<TaskItem>();
         var json = File.ReadAllText(file);
         return JsonSerializer.Deserialize<List<TaskItem>>(json) ?? new List<TaskItem>();
@@ -239,10 +268,11 @@ static void Pause()
     Console.ReadLine();
 }
 
-// ===== Helper methods =====
+// =============================================================
+// Helper methods (UI polish: colors, prompts, padded columns)
+// =============================================================
 static void WithColor(ConsoleColor color, Action action)
 {
-    // Temporarily change console color for better readability
     var prev = Console.ForegroundColor;
     Console.ForegroundColor = color;
     try { action(); }
@@ -251,7 +281,6 @@ static void WithColor(ConsoleColor color, Action action)
 
 static void Banner(string text)
 {
-    // Draws a simple colored box around title text
     WithColor(ConsoleColor.Cyan, () =>
     {
         Console.WriteLine("╔══════════════════════════════════════════╗");
@@ -260,15 +289,13 @@ static void Banner(string text)
     });
 }
 
-static void Prompt(string text) => WithColor(ConsoleColor.Cyan, () => Console.Write(text)); // Cyan prompt
-static void Success(string text) => WithColor(ConsoleColor.Green, () => Console.WriteLine(text)); // Green success message
-static void Info(string text) => WithColor(ConsoleColor.Yellow, () => Console.WriteLine(text));   // Yellow info message
-static void Error(string text) => WithColor(ConsoleColor.Red, () => Console.WriteLine(text));     // Red error message
+static void Prompt(string text)  => WithColor(ConsoleColor.Cyan,  () => Console.Write(text));
+static void Success(string text) => WithColor(ConsoleColor.Green, () => Console.WriteLine(text));
+static void Info(string text)    => WithColor(ConsoleColor.Yellow,() => Console.WriteLine(text));
+static void Error(string text)   => WithColor(ConsoleColor.Red,   () => Console.WriteLine(text));
 
-// Pads text to fit table column width
+// Simple padding & truncation for table layout
 static string Pad(string s, int width) => (s ?? "").PadRight(Math.Max(width, 0));
-
-// Shortens long text with "…" to avoid table overflow
 static string Truncate(string s, int width)
 {
     s ??= "";
@@ -277,19 +304,21 @@ static string Truncate(string s, int width)
     return s.Substring(0, width - 1).TrimEnd() + "…";
 }
 
-// ===== Model =====
-
-// Defines possible task states
+// =============================================================
+// (3) ENUM – TaskStatus (restricts state to valid values)
+// =============================================================
 enum TaskStatus { Todo, Done }
 
-// Class that represents one task record
+// =============================================================
+// (2) CLASS – TaskItem (MODEL)
+// - Blueprint for a task record used throughout the app.
+// - Works great with JSON (auto-serialize/deserialize).
+// =============================================================
 class TaskItem
 {
-    public int Id { get; set; }              // Unique number for each task
-    public string Title { get; set; } = "";  // Task title
-    public string Project { get; set; } = ""; // Optional project name
-    public DateTime DueDate { get; set; }    // Deadline date
-    public TaskStatus Status { get; set; } = TaskStatus.Todo; // Todo or Done
+    public int Id { get; set; }                  // Unique identifier
+    public string Title { get; set; } = "";      // Task title
+    public string Project { get; set; } = "";    // Optional project/category
+    public DateTime DueDate { get; set; }        // Deadline
+    public TaskStatus Status { get; set; } = TaskStatus.Todo; // Current state
 }
-
-
